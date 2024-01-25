@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Simple RPG</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            "use strict";
+
+            let x = 0;
+            let y = 0;
+
+
+            let board = [];
+            const maxWidth = 5
+            const maxHeight = 6
+            createBoard(maxWidth, maxHeight)
+
+            board[y][x] = '8'
+
+            function keyDownFunction(event) {
+                board[y][x] = '\''
+                if (event.key === "ArrowDown") {
+                    if (y < maxHeight-1) {
+                        y++;
+                    }
+                }
+                if (event.key === "ArrowUp") {
+                    if (y > 0) {
+                        y--;
+                    }
+                }
+
+                if (event.key === "ArrowLeft") {
+                    if (x > 0) {
+                        x--;
+                    }
+                }
+                if (event.key === "ArrowRight") {
+                    if (x < maxWidth-1) {
+                        x++;
+                    }
+                }
+
+                console.clear();
+                board[y][x] = '8'
+                drawWorld()
+            }
+
+            
+            function drawWorld(){
+                let temp = ""
+                for (let i = 0; i < maxHeight; i++) {
+                    temp = ""
+                    for (let j = 0; j < maxWidth; j++) {
+                        temp += board[i][j]
+                    }
+                    console.log(temp)
+                }
+            }
+
+            function createBoard(maxWidth, maxHeight) {
+                for (let i = 0; i < maxHeight; i++){
+                    let arr = []
+                    for (let j = 0; j < maxWidth; j++) {
+                        arr.push('\'')
+                    }
+
+                    board.push(arr);
+
+                }
+            }
+
+
+            
+
+            
+
+
+            // add an event listener that calls keyDownFunction
+            // whenever any key is pressed.
+            window.addEventListener("keydown", keyDownFunction);
+        </script>
+    </body>
+</html>
