@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Class 02 Mini Exercise 01</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+        "use strict"
+        // problem: why is it logging out 0?
+        // it should be 12 since 4 * 4 is 16,
+        // 2 * 2 is 4 and 16 - 4 is 12
+        // fix it to log out 12!
+
+        // problem was because there wasnt let in front of result
+        // this means that it made result var
+        function square(num){
+            let result = num * num
+            return result
+        }
+
+        const result = square(4)
+        const result2 = square(2)
+        const subtracted = result - result2
+        console.log("result: " + subtracted)
+        </script>
+    </body>
+</html>
