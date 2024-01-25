@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>ENTER EXERCISE NAME HERE</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+        "use strict"
+        class Rectangle {
+            constructor(width, height){
+                this.width = width;
+                this.height = height;
+            }
+            
+            draw() {
+                if (this.height <= 2) {
+                    console.log(("+".repeat(this.width) + "\n").repeat(this.height))
+                }
+                else {
+                    console.log("+".repeat(this.width))
+                    if (this.width <= 2) {
+                        console.log(("+".repeat(this.width) + "\n").repeat(this.height - 2))
+                    }
+                    else {
+                        console.log(("+" + "-".repeat((this.width - 2)) + "+\n").repeat((this.height - 2)))
+                    }
+                    console.log("+".repeat(this.width))
+                }
+                console.log("\n")
+            }
+
+        }
+        const r1 = new Rectangle(2, 4)
+        const r2 = new Rectangle(3, 5)
+        const r3 = new Rectangle(10, 4)
+        const r4 = new Rectangle(2, 2)
+
+        r1.draw()
+        r2.draw()
+        r3.draw()
+        r4.draw()
+
+        </script>
+    </body>
+</html>
