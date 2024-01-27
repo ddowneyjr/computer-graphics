@@ -118,14 +118,7 @@
 
             const gameBoard = new Board(5, 6);
 
-            function keyDownFunction(b) {
-                return function (event) {
-                    b.makeMove(event.key)
-                }
-                //gameBoard.makeMove(event.key)
-            }
-            // add an event listener that calls keyDownFunction
-            // whenever any key is pressed.
+            const keyDownFunction = b => event => b.makeMove(event.key)
             window.addEventListener("keydown", keyDownFunction(gameBoard));
 
         </script>
