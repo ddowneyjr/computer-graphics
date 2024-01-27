@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Simple RPG</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            "use strict";
+
+            class Character {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                }
+            }
+
+            class Board {
+                constructor(width, height) {
+                    this.width = width;
+                    this.height = height;
+                    this.board = this.createBoard();
+                    this.player = new Character(0, 0);
+
+                    const locations = this.generateRandomLocations(7);
+                    this.goal = locations[0];
+                    this.obstacles = locations.slice(1,4);
+                    this.traps = locations.slice(5,7);
+
+                    this.startGame();
+                }
+
+                startGame() {
+                    this.addCharacter();
+                    this.drawWorld();
+                }
+
+                generateRandomLocations (total) {
+                    let arr = [];
+                    while (arr.length < total) {
+                        var pos_x = Math.floor(Math.random() * this.width) + 1;
+                        var pos_y = Math.floor(Math.random() * this.height) + 1;
+                        if (arr.indexOf([pos_x, pos_y]) === -1) {
+                            arr.push([pos_x, pos_y]);
+                        }
+                    }
+                    return arr;
+                }
+
+                createBoard() {
+                    const toReturn = [];
+                    for (let i = 0; i < this.height; i++) {
+                        let arr = [];
+                        for (let j = 0; j < this.height; j++) {
+                            arr.push("'");
+                        }
+
+                        toReturn.push(arr);
+                    }
+                    return toReturn;
+                }
+
+                addCharacter() {
+                    this.board[this.player.y][this.player.x] = "8";
+                }
+
+                removeCharacter() {
+                    this.board[this.player.y][this.player.x] = "'";
+                }
+
+                refresh() {
+                    console.clear();
+                    this.drawWorld();
+                }
+
+                drawWorld() {
+                    let temp = "";
+                    for (let i = 0; i < this.height; i++) {
+                        temp = "";
+                        for (let j = 0; j < this.width; j++) {
+                            temp += this.board[i][j];
+                        }
+                        console.log(temp);
+                    }
+                }
+
+                makeMove(move) {
+                    this.removeCharacter();
+                    let newPlayer = this.player
+                    if (move === "ArrowDown") {
+                        if (newPlayer.y < this.height - 1) {
+                            newPlayer.y++;
+                        }
+                    }
+                    else if (move === "ArrowUp") {
+                        if (newPlayer.y > 0) {
+                            newPlayer.y--;
+                        }
+                    }
+
+                    else if (move === "ArrowLeft") {
+                        if (newPlayer.x > 0) {
+                            newplayer.x--;
+                        }
+                    }
+                    else if (move === "ArrowRight") {
+                        if (newPlayer.x < this.width - 1) {
+                            newPlayer.x++;
+                        }
+                    }
+
+                    this.player = newPlayer;
+                    
+                    this.addCharacter();
+                    this.refresh();
+                }
+            }
+
+            const gameBoard = new Board(5, 6);
+
+            function keyDownFunction(b) {
+                return function (event) {
+                    b.makeMove(event.key)
+                }
+                //gameBoard.makeMove(event.key)
+            }
+            // add an event listener that calls keyDownFunction
+            // whenever any key is pressed.
+            window.addEventListener("keydown", keyDownFunction(gameBoard));
+
+        </script>
+    </body>
+</html>
