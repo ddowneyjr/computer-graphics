@@ -87,28 +87,31 @@
                 makeMove(move) {
                     this.removeCharacter();
                     let newPlayer = this.player
-                    if (move === "ArrowDown") {
-                        if (newPlayer.y < this.height - 1) {
-                            newPlayer.y++;
-                        }
+                    switch (move) {
+                        case "ArrowDown":
+                            if (newPlayer.y < this.height - 1) {
+                                newPlayer.y++;
+                            }
+                            break;
+                        case "ArrowUp":
+                            if (newPlayer.y > 0) {
+                                newPlayer.y--;
+                            }
+                            break;
+                        case "ArrowLeft":
+                            if (newPlayer.x > 0) {
+                                newPlayer.x--;
+                            }
+                            break;
+                        case "ArrowRight":
+                            if (newPlayer.x < this.width - 1) {
+                                newPlayer.x++;
+                            }
+                            break;
+                        default:
+                            return
+                        break;
                     }
-                    else if (move === "ArrowUp") {
-                        if (newPlayer.y > 0) {
-                            newPlayer.y--;
-                        }
-                    }
-
-                    else if (move === "ArrowLeft") {
-                        if (newPlayer.x > 0) {
-                            newplayer.x--;
-                        }
-                    }
-                    else if (move === "ArrowRight") {
-                        if (newPlayer.x < this.width - 1) {
-                            newPlayer.x++;
-                        }
-                    }
-
                     this.player = newPlayer;
                     
                     this.addCharacter();
