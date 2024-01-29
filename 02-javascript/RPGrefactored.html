@@ -21,6 +21,7 @@
                     this.height = height;
                     this.board = this.createBoard();
                     this.player = new Character(0, 0);
+                    this.over = false
 
                     const locations = this.generateRandomLocations(7);
                     this.goal = locations[0];
@@ -38,9 +39,7 @@
                 }
 
                 drawStuff() {
-                    console.log(this.obstacles);
                     for (let pos of this.obstacles) {
-                        console.log(pos)
                         this.board[pos[0]][pos[1]] = "O"
                     }
                     this.board[this.goal[0]][this.goal[1]] = "X"
@@ -49,8 +48,8 @@
                 generateRandomLocations (total) {
                     let arr = [];
                     while (arr.length < total) {
-                        var pos_x = Math.floor(Math.random() * this.width) + 1;
-                        var pos_y = Math.floor(Math.random() * this.height) + 1;
+                        var pos_x = Math.floor(Math.random() * this.height);
+                        var pos_y = Math.floor(Math.random() * this.width);
                         if (arr.indexOf([pos_x, pos_y]) === -1) {
                             arr.push([pos_x, pos_y]);
                         }
@@ -96,6 +95,9 @@
                 }
 
                 makeMove(move) {
+                    if(this.over) {
+                        return
+                    }
                     this.removeCharacter();
                     let newPlayer = new Character(this.player.x, this.player.y)
                     switch (move) {
@@ -127,7 +129,6 @@
                     let temp = [newPlayer.y, newPlayer.x]
                     
                     if (this.obstacles.some(obstacle => obstacle[0] === temp[0] && obstacle[1] === temp[1])) {
-                        console.log("here")
                         this.addCharacter();
                         this.refresh()
 
@@ -135,21 +136,19 @@
                     else if (this.traps.some(trap => trap[0] === temp[0] && trap[1] === temp[1])) {
                         console.clear();
                         console.log("You Lose");
-                        window.removeEventListener("keydown", keydownFunction(this));
+                        this.over = true
                     }
                     else if (this.goal[0] == temp[0] && this.goal[1] == temp[1]) {
                         console.clear();
                         console.log("You Win");
-                        window.removeEventListener("keydown", keydownFunction(this));
+                        this.over = true
                     }
                     else {
-                        console.log("here")
                         this.player = newPlayer;
                         this.addCharacter();
                         this.refresh();
                     }
-                    console.log(temp, this.obstacles)
-                    console.log(this.obstacles.some(obstacle => obstacle[0] === temp[0] && obstacle[1] === temp[1]));                }
+                }
             }
 
             const gameBoard = new Board(5, 6);
