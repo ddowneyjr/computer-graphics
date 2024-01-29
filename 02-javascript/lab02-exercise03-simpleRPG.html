@@ -8,88 +8,154 @@
         <script type="text/javascript">
             "use strict";
 
-            let x = 0;
-            let y = 0;
-
-            let board = [];
-            const maxWidth = 5;
-            const maxHeight = 6;
-
-            let stuff = randLocation(7)
-            const goal = stuff[0]
-            const obstacles = stuff.slice(1,4)
-            const traps = stuff.slice(5,7)
-
-            console.log(stuff, goal, obstacles, traps)
-
-            createBoard(maxWidth, maxHeight);
-
-            board[y][x] = "8";
-
-            function keyDownFunction(event) {
-                board[y][x] = "'";
-                if (event.key === "ArrowDown") {
-                    if (y < maxHeight - 1) {
-                        y++;
-                    }
-                }
-                if (event.key === "ArrowUp") {
-                    if (y > 0) {
-                        y--;
-                    }
-                }
-
-                if (event.key === "ArrowLeft") {
-                    if (x > 0) {
-                        x--;
-                    }
-                }
-                if (event.key === "ArrowRight") {
-                    if (x < maxWidth - 1) {
-                        x++;
-                    }
-                }
-
-                console.clear();
-                board[y][x] = "8";
-                drawWorld();
-            }
-
-            function drawWorld() {
-                let temp = "";
-                for (let i = 0; i < maxHeight; i++) {
-                    temp = "";
-                    for (let j = 0; j < maxWidth; j++) {
-                        temp += board[i][j];
-                    }
-                    console.log(temp);
+            class Character {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
                 }
             }
 
-            function createBoard(maxWidth, maxHeight) {
-                for (let i = 0; i < maxHeight; i++) {
+            class Board {
+                constructor(width, height) {
+                    this.width = width;
+                    this.height = height;
+                    this.board = this.createBoard();
+                    this.player = new Character(0, 0);
+                    this.over = false
+
+                    const locations = this.generateRandomLocations(7);
+                    this.goal = locations[0];
+                    this.obstacles = locations.slice(1,4);
+                    this.traps = locations.slice(4,7);
+
+                    this.drawStuff()
+
+                    this.startGame();
+                }
+
+                startGame() {
+                    this.addCharacter();
+                    this.drawWorld();
+                }
+
+                drawStuff() {
+                    for (let pos of this.obstacles) {
+                        this.board[pos[0]][pos[1]] = "O"
+                    }
+                    this.board[this.goal[0]][this.goal[1]] = "X"
+                }
+
+                generateRandomLocations (total) {
                     let arr = [];
-                    for (let j = 0; j < maxWidth; j++) {
-                        arr.push("'");
+                    while (arr.length < total) {
+                        var pos_x = Math.floor(Math.random() * this.height);
+                        var pos_y = Math.floor(Math.random() * this.width);
+                        if (arr.indexOf([pos_x, pos_y]) === -1) {
+                            arr.push([pos_x, pos_y]);
+                        }
                     }
+                    return arr;
+                }
 
-                    board.push(arr);
+                createBoard() {
+                    const toReturn = [];
+                    for (let i = 0; i < this.height; i++) {
+                        let arr = [];
+                        for (let j = 0; j < this.height; j++) {
+                            arr.push("'");
+                        }
+
+                        toReturn.push(arr);
+                    }
+                    return toReturn;
+                }
+
+                addCharacter() {
+                    this.board[this.player.y][this.player.x] = "8";
+                }
+
+                removeCharacter() {
+                    this.board[this.player.y][this.player.x] = "'";
+                }
+
+                refresh() {
+                    console.clear();
+                    this.drawWorld();
+                }
+
+                drawWorld() {
+                    let temp = "";
+                    for (let i = 0; i < this.height; i++) {
+                        temp = "";
+                        for (let j = 0; j < this.width; j++) {
+                            temp += this.board[i][j];
+                        }
+                        console.log(temp);
+                    }
+                }
+
+                makeMove(move) {
+                    if(this.over) {
+                        return
+                    }
+                    this.removeCharacter();
+                    let newPlayer = new Character(this.player.x, this.player.y)
+                    switch (move) {
+                        case "ArrowDown":
+                            if (newPlayer.y < this.height - 1) {
+                                newPlayer.y++;
+                            }
+                            break;
+                        case "ArrowUp":
+                            if (newPlayer.y > 0) {
+                                newPlayer.y--;
+                            }
+                            break;
+                        case "ArrowLeft":
+                            if (newPlayer.x > 0) {
+                                newPlayer.x--;
+                            }
+                            break;
+                        case "ArrowRight":
+                            if (newPlayer.x < this.width - 1) {
+                                newPlayer.x++;
+                            }
+                            break;
+                        default:
+                            return
+                        break;
+                    }
+                    
+                    let temp = [newPlayer.y, newPlayer.x]
+                    
+                    if (this.obstacles.some(obstacle => obstacle[0] === temp[0] && obstacle[1] === temp[1])) {
+                        this.addCharacter();
+                        this.refresh()
+
+                    }
+                    else if (this.traps.some(trap => trap[0] === temp[0] && trap[1] === temp[1])) {
+                        console.clear();
+                        console.log("You Lose");
+                        this.over = true
+                    }
+                    else if (this.goal[0] == temp[0] && this.goal[1] == temp[1]) {
+                        console.clear();
+                        console.log("You Win");
+                        this.over = true
+                    }
+                    else {
+                        this.player = newPlayer;
+                        this.addCharacter();
+                        this.refresh();
+                    }
                 }
             }
 
-            function randLocation(total) {
-                let arr = []
-                while (arr.length < total) {
-                    var pos_x = Math.floor(Math.random() * maxWidth) + 1;
-                    var pos_y = Math.floor(Math.random() * maxHeight) + 1;
-                    if (arr.indexOf([pos_x, pos_y]) === -1) arr.push([pos_x, pos_y]);
-                }
-                return arr
-            }
+            const gameBoard = new Board(5, 6);
 
-            // add an event listener that calls keyDownFunction
-            // whenever any key is pressed.
-            window.addEventListener("keydown", keyDownFunction);
+            const keyDownFunction = b => event => b.makeMove(event.key)
+            window.addEventListener("keydown", keyDownFunction(gameBoard));
+
         </script>
     </body>
 </html>
