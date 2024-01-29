@@ -38,10 +38,11 @@
                 }
 
                 drawStuff() {
-                    for (pos in obstacles) {
+                    console.log(this.obstacles);
+                    for (let pos in this.obstacles) {
                         this.board[pos[0]][pos[1]] = "O"
                     }
-                    this.board[goal[0]][goal[1]] = "X"
+                    this.board[this.goal[0]][this.goal[1]] = "X"
                 }
 
                 generateRandomLocations (total) {
@@ -124,23 +125,26 @@
                     
                     let temp = [newPlayer.x, newPlayer.y]
                     if (this.obstacles.includes(temp)) {
-                         
+                        console.log("here")
                         this.addCharacter();
                         this.refresh();
 
                     }
                     else if (this.traps.includes(temp)) {
-                        console.clear()
-                        console.log("You Lose")
-                        window.removeEventListener("keydown", keydownFunction(this))
+                        console.clear();
+                        console.log("You Lose");
+                        window.removeEventListener("keydown", keydownFunction(this));
                     }
                     else if (this.goal === temp) {
-                        console.clear()
-                        console.log("You Win")
-                        window.removeEventListener("keydown", keydownFunction(this))
+                        console.clear();
+                        console.log("You Win");
+                        window.removeEventListener("keydown", keydownFunction(this));
                     }
                     else {
+                        console.log("here")
                         this.player = newPlayer;
+                        this.addCharacter();
+                        this.refresh();
                     }
                 }
             }
