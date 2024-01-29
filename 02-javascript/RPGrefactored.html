@@ -27,12 +27,21 @@
                     this.obstacles = locations.slice(1,4);
                     this.traps = locations.slice(5,7);
 
+                    this.drawStuff()
+
                     this.startGame();
                 }
 
                 startGame() {
                     this.addCharacter();
                     this.drawWorld();
+                }
+
+                drawStuff() {
+                    for (pos in obstacles) {
+                        this.board[pos[0]][pos[1]] = "O"
+                    }
+                    this.board[goal[0]][goal[1]] = "X"
                 }
 
                 generateRandomLocations (total) {
@@ -112,10 +121,27 @@
                             return
                         break;
                     }
-                    this.player = newPlayer;
                     
-                    this.addCharacter();
-                    this.refresh();
+                    let temp = [newPlayer.x, newPlayer.y]
+                    if (this.obstacles.includes(temp)) {
+                         
+                        this.addCharacter();
+                        this.refresh();
+
+                    }
+                    else if (this.traps.includes(temp)) {
+                        console.clear()
+                        console.log("You Lose")
+                        window.removeEventListener("keydown", keydownFunction(this))
+                    }
+                    else if (this.goal === temp) {
+                        console.clear()
+                        console.log("You Win")
+                        window.removeEventListener("keydown", keydownFunction(this))
+                    }
+                    else {
+                        this.player = newPlayer;
+                    }
                 }
             }
 
