@@ -25,7 +25,7 @@
                     const locations = this.generateRandomLocations(7);
                     this.goal = locations[0];
                     this.obstacles = locations.slice(1,4);
-                    this.traps = locations.slice(5,7);
+                    this.traps = locations.slice(4,7);
 
                     this.drawStuff()
 
@@ -39,7 +39,8 @@
 
                 drawStuff() {
                     console.log(this.obstacles);
-                    for (let pos in this.obstacles) {
+                    for (let pos of this.obstacles) {
+                        console.log(pos)
                         this.board[pos[0]][pos[1]] = "O"
                     }
                     this.board[this.goal[0]][this.goal[1]] = "X"
@@ -96,7 +97,7 @@
 
                 makeMove(move) {
                     this.removeCharacter();
-                    let newPlayer = this.player
+                    let newPlayer = new Character(this.player.x, this.player.y)
                     switch (move) {
                         case "ArrowDown":
                             if (newPlayer.y < this.height - 1) {
@@ -123,19 +124,20 @@
                         break;
                     }
                     
-                    let temp = [newPlayer.x, newPlayer.y]
-                    if (this.obstacles.includes(temp)) {
+                    let temp = [newPlayer.y, newPlayer.x]
+                    
+                    if (this.obstacles.some(obstacle => obstacle[0] === temp[0] && obstacle[1] === temp[1])) {
                         console.log("here")
                         this.addCharacter();
-                        this.refresh();
+                        this.refresh()
 
                     }
-                    else if (this.traps.includes(temp)) {
+                    else if (this.traps.some(trap => trap[0] === temp[0] && trap[1] === temp[1])) {
                         console.clear();
                         console.log("You Lose");
                         window.removeEventListener("keydown", keydownFunction(this));
                     }
-                    else if (this.goal === temp) {
+                    else if (this.goal[0] == temp[0] && this.goal[1] == temp[1]) {
                         console.clear();
                         console.log("You Win");
                         window.removeEventListener("keydown", keydownFunction(this));
@@ -146,7 +148,8 @@
                         this.addCharacter();
                         this.refresh();
                     }
-                }
+                    console.log(temp, this.obstacles)
+                    console.log(this.obstacles.some(obstacle => obstacle[0] === temp[0] && obstacle[1] === temp[1]));                }
             }
 
             const gameBoard = new Board(5, 6);
