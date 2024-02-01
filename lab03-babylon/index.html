@@ -72,9 +72,29 @@
             camera.attachControl(canvas, true);
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
 
-            
-
+            const ground = buildGround();
+            const snowman = buildSnowman();
             return scene;
+        }
+
+        const buildSnowman = () => {
+<!-- build me a snowman out of three spheres -->
+            const sphere1 = BABYLON.MeshBuilder.CreateSphere("sphere1", { diameter: 3 }, scene);
+            sphere1.position.y = 1.5;
+            const sphere2 = BABYLON.MeshBuilder.CreateSphere("sphere2", { diameter: 2 }, scene);
+            sphere2.position.y = 3.5;
+            const sphere3 = BABYLON.MeshBuilder.CreateSphere("sphere3", { diameter: 1 }, scene);
+            sphere3.position.y = 4.75;
+            return BABYLON.Mesh.MergeMeshes([sphere1, sphere2, sphere3], true, false, null, false, true);
+
+        }
+
+        const buildGround = () => {
+            const groundMat = new BABYLON.StandardMaterial("groundMat");
+            groundMat.diffuseColor = new BABYLON.Color3(0, 1, 0)
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", {width:10, height:10});
+            ground.material = groundMat;
+            return ground
         }
 
         
