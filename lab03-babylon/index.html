@@ -72,10 +72,41 @@
             camera.attachControl(canvas, true);
             const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 0));
 
+            <!-- create a custom mesh with an array of vertices -->
+
+            const circleMesh = buildCircle(10, 8);
+            
             const ground = buildGround();
             const snowman = buildSnowman();
             const house = buildHouse(2, 3);
             return scene;
+        }
+
+        const buildCircle = (count, radius) => {
+            let customMesh = new BABYLON.Mesh("custom", scene);
+            let positions = [];
+            let indices = [];
+            positions.push(0, 0, 0);
+            for (let i = 0; i < count; i++) {
+                let angle = Math.PI * 2 / count * i;
+                positions.push(Math.cos(angle) * radius, Math.sin(angle) * radius, 1);
+                if (i > 0) {
+                    indices.push(0, i, i + 1);
+                }
+            }
+            indices.push(0, count, 1)
+            let vertexData = new BABYLON.VertexData();
+            vertexData.positions = positions;
+            vertexData.indices = indices;
+            vertexData.applyToMesh(customMesh);
+
+            <!-- add material to custommesh -->
+            let customMaterial = new BABYLON.StandardMaterial("customMaterial", scene);
+            customMaterial.diffuseTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/normalMap.jpg", scene); 
+            customMesh.material = customMaterial;
+
+            return customMesh;
+
         }
 
         const buildSnowman = () => {
@@ -86,7 +117,14 @@
             sphere2.position.y = 3.5;
             const sphere3 = BABYLON.MeshBuilder.CreateSphere("sphere3", { diameter: 1 }, scene);
             sphere3.position.y = 4.75;
-            return BABYLON.Mesh.MergeMeshes([sphere1, sphere2, sphere3], true, false, null, false, true);
+            
+            let customMaterial = new BABYLON.StandardMaterial("customMaterial", scene);
+            customMaterial.diffuseColor = new BABYLON.Color3.Teal();
+            sphere1.material = customMaterial;
+            sphere2.material = customMaterial;
+            sphere3.material = customMaterial;
+
+            return  BABYLON.Mesh.MergeMeshes([sphere1, sphere2, sphere3], true, false, null, false, true);
 
         }
 
@@ -102,6 +140,11 @@
             const box = BABYLON.MeshBuilder.CreateBox("box", { width: width });
             box.position.x = pos_x;
             box.position.y = .5
+
+            let customMaterial = new BABYLON.StandardMaterial("customMaterial", scene);
+            customMaterial.diffuseTexture = new BABYLON.Texture("https://www.babylonjs-playground.com/textures/floor.png", scene);
+            box.material = customMaterial;
+
             return box;
         }
 
@@ -112,6 +155,9 @@
             roof.scaling.y = width;
             roof.rotation.z = Math.PI / 2;
             roof.position.y = 1.22;
+            let customMaterial = new BABYLON.StandardMaterial("customMaterial", scene);
+            customMaterial.diffuseTexture = new BABYLON.Texture("https://assets.babylonjs.com/environments/roof.jpg", scene);
+            roof.material = customMaterial;
             return roof;
         }
 
