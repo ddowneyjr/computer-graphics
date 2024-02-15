@@ -108,7 +108,7 @@ class Playground {
             [sphere1, sphere2, sphere3],
             true,
             false,
-            null,
+            undefined,
             false,
             true
         );
@@ -188,14 +188,20 @@ class Playground {
         const box = this.buildBox(width, pos_x, scene);
         const roof = this.buildRoof(width, pos_x, scene);
 
-        return BABYLON.Mesh.MergeMeshes(
+        let mergedMeshes = BABYLON.Mesh.MergeMeshes(
             [box, roof],
             true,
             false,
-            null,
+            undefined,
             false,
             true
         );
+
+        if (!mergedMeshes) {
+            throw new Error("there was a merged meshes error");
+        }
+
+        return mergedMeshes;
     }
 }
 
