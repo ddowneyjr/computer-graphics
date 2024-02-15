@@ -21,14 +21,46 @@ class Playground {
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        // Our built-in 'sphere' shape. Params: name, subdivs, size, scene
-        var sphere = BABYLON.Mesh.CreateSphere("sphere1", 16, 2, scene);
-
-        // Move the sphere upward 1/2 its height
-        sphere.position.y = 1;
+        
 
         // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
         var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+
+
+        var box = BABYLON.MeshBuilder.CreateBox("box", {size: 2});
+    box.position.y = 1;
+
+    // ` ` these quatioan marks allow a multi-line string in Javascript (" " or ' ' is single line)
+    var vertex_shader = `
+        attribute vec3 position;
+        uniform mat4 worldViewProjection;
+        
+        void main() {
+            vec4 p = vec4(position, 1.);
+            gl_Position = worldViewProjection * p;
+        }
+    `;
+
+    var fragment_shader = `
+        uniform vec3 color;
+
+        void main() {
+            gl_FragColor = vec4(1,1,0,1); // yellow
+        }
+    `;
+
+    var shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
+        // assign source code for vertex and fragment shader (string)
+        vertexSource: vertex_shader, 
+        fragmentSource: fragment_shader
+    },
+    {
+        // assign shader inputs
+        attributes: ["position"], // position is BabylonJS build-in
+        uniforms: ["worldViewProjection"], // worldViewProjection is BabylonJS build-in
+    });
+    
+    box.material = shaderMaterial;
 
         return scene;
     }
