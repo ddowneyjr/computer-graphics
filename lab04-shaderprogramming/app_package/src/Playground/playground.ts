@@ -3,64 +3,129 @@ import "@babylonjs/loaders";
 
 class Playground {
     public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
-        // This creates a basic Babylon Scene object (non-mesh)
         var scene = new BABYLON.Scene(engine);
 
-        // This creates and positions a free camera (non-mesh)
-        var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
-
-        // This targets the camera to scene origin
-        camera.setTarget(BABYLON.Vector3.Zero());
-
-        // This attaches the camera to the canvas
+        const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 1, 10, new BABYLON.Vector3(0, 0, 0), scene);
         camera.attachControl(canvas, true);
 
-        // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-
-        // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
+        let rightGround = BABYLON.MeshBuilder.CreateGround("rightGround", {width: 6, height: 6, subdivisions: 500}, scene);
+        let leftGround = BABYLON.MeshBuilder.CreateGround("leftGround", {width: 6, height: 6, subdivisions: 500}, scene);
+        leftGround.position.x = -4;
+        rightGround.position.x = 4;
         
 
-        // Our built-in 'ground' shape. Params: name, width, depth, subdivs, scene
-        var ground = BABYLON.Mesh.CreateGround("ground1", 6, 6, 2, scene);
+        let lightBlue = BABYLON.Vector3.FromArray([100.0/255.0, 180.0/255.0, 220.0/255.0]);
+        let avocado = BABYLON.Vector3.FromArray([118.0/255.0, 148.0/255.0, 86.0/255.0]);
 
 
-        var box = BABYLON.MeshBuilder.CreateBox("box", {size: 2});
-    box.position.y = 1;
-
-    // ` ` these quatioan marks allow a multi-line string in Javascript (" " or ' ' is single line)
-    var vertex_shader = `
+        var normalVertex = `
         attribute vec3 position;
         uniform mat4 worldViewProjection;
-        
         void main() {
-            vec4 p = vec4(position, 1.);
-            gl_Position = worldViewProjection * p;
+            gl_Position = worldViewProjection * vec4(position, 1.0);
         }
-    `;
+        `;
 
-    var fragment_shader = `
+        var solidColorFragment= `
         uniform vec3 color;
 
         void main() {
-            gl_FragColor = vec4(1,1,0,1); // yellow
-        }
-    `;
+            gl_FragColor = vec4(color, 1.0);
 
-    var shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
-        // assign source code for vertex and fragment shader (string)
-        vertexSource: vertex_shader, 
-        fragmentSource: fragment_shader
-    },
-    {
-        // assign shader inputs
-        attributes: ["position"], // position is BabylonJS build-in
-        uniforms: ["worldViewProjection"], // worldViewProjection is BabylonJS build-in
-    });
-    
-    box.material = shaderMaterial;
+        }
+        `;
+
+        var crazyVertex= `
+        attribute vec3 position;
+        uniform mat4 worldViewProjection;
+
+        void main() {
+            vec4 p = vec4(position, 1.0);
+            gl_Position = worldViewProjection * p;
+            gl_Position.y = gl_Position.y + sin(gl_Position.x + gl_Position.z);
+            gl_Position.x = gl_Position.x - cos(gl_Position.y + gl_Position.z);
+            gl_Position.z = gl_Position.z + sin(gl_Position.x + gl_Position.y);
+        }
+        `;
+
+        var vertexWave = `
+            precision highp float;
+            attribute vec3 position;
+            uniform mat4 worldViewProjection;
+            uniform float time;
+        
+            void main() {
+                vec4 p = vec4(position, 1.);
+                p.y += sin(p.x*4. + time);
+                p.z += cos(p.y*4. + time);
+                gl_Position = worldViewProjection * p;
+            }
+        `;
+
+        var waveFragment = `
+            uniform vec3 color;
+            varying vec3 localPosition;
+            void main() {
+                gl_FragColor = vec4(color + localPosition, 1.0);
+            }
+
+        `;
+
+        var spiralFragment = `
+        precision highp float;
+        uniform float time;
+        void main() {
+            vec3 color = vec3(0.5 + 0.5 * cos(time), 0.5 + 0.5 * sin(time), 0.5 + 0.5 * cos(time + 3.14));
+            gl_FragColor = vec4(color, 1.0);
+        }
+
+        `;
+
+
+        let greenBoring = new BABYLON.ShaderMaterial('boringMaterial', scene, { 
+            vertexSource: normalVertex,
+            fragmentSource: solidColorFragment
+        },
+        {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "color"]
+        });
+
+        let blueBoring = new BABYLON.ShaderMaterial("boringMaterial", scene, {
+            vertexSource: normalVertex,
+            fragmentSource: solidColorFragment
+        },
+        {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "color"]
+        });
+
+        let blueWave = new BABYLON.ShaderMaterial("waveMaterial", scene, {
+            vertexSource: vertexWave,
+            fragmentSource: waveFragment 
+        },
+        {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "time", "color"]
+        });
+
+        blueBoring.setVector3("color", lightBlue);
+        greenBoring.setVector3("color", avocado);
+        blueWave.setVector3("color", lightBlue);
+        blueWave.backFaceCulling = false;
+
+
+        leftGround.material = blueWave;
+        // leftGround.increaseVertices(1000);
+        rightGround.material = greenBoring;
+
+        function update() {
+            blueWave.setFloat("time", performance.now() / 1000);
+        }
+        scene.registerBeforeRender(update);
 
         return scene;
     }
