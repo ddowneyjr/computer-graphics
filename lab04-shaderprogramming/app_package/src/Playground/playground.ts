@@ -61,11 +61,16 @@ class Playground {
             attribute vec3 position;
             uniform mat4 worldViewProjection;
             uniform float time;
+            float frequency = 1.3; 
+            float frequency2 = 0.8;
+            float amp = 3.2;
+            float amp2 = 3.7;
+
         
             void main() {
                 vec4 p = vec4(position, 1.);
-                p.y += sin(p.x*4. + time);
-                p.z += cos(p.y*4. + time);
+                p.y += sin(p.x*amp + time * frequency);
+                p.z += cos(p.y*amp2 + time * frequency2);
                 gl_Position = worldViewProjection * p;
             }
         `;
@@ -87,6 +92,10 @@ class Playground {
             gl_FragColor = vec4(color, 1.0);
         }
 
+        `;
+        
+        var vertexIDShader = `
+            precision highp float;
         `;
 
         let varyingTest = new BABYLON.ShaderMaterial("varyingTest", scene, {
