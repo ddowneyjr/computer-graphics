@@ -79,7 +79,7 @@ class Playground {
             uniform vec3 color;
             varying vec3 v_position;
             void main() {
-                gl_FragColor = vec4(color+v_position,1);
+                gl_FragColor = vec4(v_position,1);
             }
         `;
 
@@ -95,12 +95,24 @@ class Playground {
         `;
         
         var vertexIDShader = `
-            precision highp float;
+        attribute vec3 position;
+        uniform mat4 worldViewProjection;
+
+        varying vec3 v_position;
+
+        void main() {
+            v_position = position;
+            vec4 p = vec4(position, 1.0);
+            gl_Position = worldViewProjection * p;
+            gl_Position.y = gl_Position.y + sin(gl_Position.x * float(gl_VertexID));
+            gl_Position.x = gl_Position.x - cos(gl_Position.y / float(gl_VertexID));
+            gl_Position.z = gl_Position.z + sin(gl_Position.x + float(gl_VertexID));
+        }
         `;
 
         let varyingTest = new BABYLON.ShaderMaterial("varyingTest", scene, {
-            vertexSource: normalVertex,
-            fragmentSource: waveFragment,
+            vertexSource: vertexIDShader,
+            fragmentSource: spiralFragment,
         },
         {
             attributes: ["position"],
@@ -153,11 +165,12 @@ class Playground {
 
 
         leftGround.material = blueWave;
-        rightGround.material = greenCrazy;
+        rightGround.material = varyingTest;
 
         function update() {
             blueWave.setFloat("time", performance.now() / 1000);
             greenCrazy.setFloat("time", performance.now() / 1000);
+            varyingTest.setFloat("time", performance.now() / 1000);
 
         }
         scene.registerBeforeRender(update);
