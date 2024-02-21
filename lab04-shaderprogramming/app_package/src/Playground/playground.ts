@@ -24,7 +24,9 @@ class Playground {
         var normalVertex = `
         attribute vec3 position;
         uniform mat4 worldViewProjection;
+        varying vec3 v_position;
         void main() {
+            v_position = position;
             gl_Position = worldViewProjection * vec4(position, 1.0);
         }
         `;
@@ -42,7 +44,10 @@ class Playground {
         attribute vec3 position;
         uniform mat4 worldViewProjection;
 
+        varying vec3 v_position;
+
         void main() {
+            v_position = position;
             vec4 p = vec4(position, 1.0);
             gl_Position = worldViewProjection * p;
             gl_Position.y = gl_Position.y + sin(gl_Position.x + gl_Position.z);
@@ -76,8 +81,9 @@ class Playground {
         var spiralFragment = `
         precision highp float;
         uniform float time;
+        varying vec3 v_position;
         void main() {
-            vec3 color = vec3(0.5 + 0.5 * cos(time), 0.5 + 0.5 * sin(time), 0.5 + 0.5 * cos(time + 3.14));
+            vec3 color = vec3(0.5 * v_position.x + 0.5 * sin(time), 0.5 * v_position.y + 0.5 * cos(time), 0.5 * v_position.z + 0.5 * sin(time));
             gl_FragColor = vec4(color, 1.0);
         }
 
@@ -89,7 +95,7 @@ class Playground {
         },
         {
             attributes: ["position"],
-            uniforms: ["worldViewProjection", "color"],
+            uniforms: ["worldViewProjection", "color"]
         });
 
         let greenBoring = new BABYLON.ShaderMaterial('boringMaterial', scene, { 
@@ -121,11 +127,11 @@ class Playground {
 
         let greenCrazy = new BABYLON.ShaderMaterial("crazyMaterial", scene, {
             vertexSource: crazyVertex,
-            fragmentSource: solidColorFragment
+            fragmentSource: spiralFragment 
         },
         {
             attributes: ["position"],
-            uniforms: ["worldViewProjection", "color"]
+            uniforms: ["worldViewProjection", "time"]
         });
 
         blueBoring.setVector3("color", lightBlue);
@@ -134,13 +140,15 @@ class Playground {
         blueWave.backFaceCulling = false;
         greenCrazy.setVector3("color", avocado);
         greenCrazy.backFaceCulling = false;
+        varyingTest.setVector3("color", lightBlue);
 
 
         leftGround.material = blueWave;
-        rightGround.material = varyingTest;
+        rightGround.material = greenCrazy;
 
         function update() {
             blueWave.setFloat("time", performance.now() / 1000);
+            greenCrazy.setFloat("time", performance.now() / 1000);
 
         }
         scene.registerBeforeRender(update);
