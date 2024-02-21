@@ -67,11 +67,10 @@ class Playground {
 
         var waveFragment = `
             uniform vec3 color;
-            varying vec3 localPosition;
+            varying vec3 v_position;
             void main() {
-                gl_FragColor = vec4(color + localPosition, 1.0);
+                gl_FragColor = vec4(color+v_position,1);
             }
-
         `;
 
         var spiralFragment = `
@@ -84,6 +83,14 @@ class Playground {
 
         `;
 
+        let varyingTest = new BABYLON.ShaderMaterial("varyingTest", scene, {
+            vertexSource: normalVertex,
+            fragmentSource: waveFragment,
+        },
+        {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "color"],
+        });
 
         let greenBoring = new BABYLON.ShaderMaterial('boringMaterial', scene, { 
             vertexSource: normalVertex,
@@ -105,25 +112,36 @@ class Playground {
 
         let blueWave = new BABYLON.ShaderMaterial("waveMaterial", scene, {
             vertexSource: vertexWave,
-            fragmentSource: waveFragment 
+            fragmentSource: solidColorFragment 
         },
         {
             attributes: ["position"],
             uniforms: ["worldViewProjection", "time", "color"]
         });
 
+        let greenCrazy = new BABYLON.ShaderMaterial("crazyMaterial", scene, {
+            vertexSource: crazyVertex,
+            fragmentSource: solidColorFragment
+        },
+        {
+            attributes: ["position"],
+            uniforms: ["worldViewProjection", "color"]
+        });
+
         blueBoring.setVector3("color", lightBlue);
         greenBoring.setVector3("color", avocado);
         blueWave.setVector3("color", lightBlue);
         blueWave.backFaceCulling = false;
+        greenCrazy.setVector3("color", avocado);
+        greenCrazy.backFaceCulling = false;
 
 
         leftGround.material = blueWave;
-        // leftGround.increaseVertices(1000);
-        rightGround.material = greenBoring;
+        rightGround.material = varyingTest;
 
         function update() {
             blueWave.setFloat("time", performance.now() / 1000);
+
         }
         scene.registerBeforeRender(update);
 
