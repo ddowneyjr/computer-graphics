@@ -49,6 +49,7 @@ class Playground {
         uniform mat4 world;
         uniform mat4 view;
         uniform mat4 projection;
+        uniform float time;
                 
         void main() {
             vec4 localPosition = vec4(position, 1.);
@@ -77,7 +78,7 @@ class Playground {
             },
             {
                 attributes: ["position"], // position is BabylonJS build-in
-                uniforms: ["myWorld", "world", "view", "projection", "color"], // view, projection are BabylonJS build-in
+                uniforms: ["myWorld", "world", "view", "projection", "color", "time"], // view, projection are BabylonJS build-in
             }
         );
 
@@ -94,49 +95,52 @@ class Playground {
         // assign custom myWorld uniform
 
         // Translation Matrices
-        const boxTranslationMatrixArray = makeTranslationMatrix(0, 3, 0);
-        const boxTranslationMatrix = BABYLON.Matrix.FromArray(
-            boxTranslationMatrixArray
-        );
-
-        // Scaling Matrices
-        const boxScaleMatrixArray = makeScaleMatrix(0.5, 0.5, 0.5);
-        const boxScaleMatrix = BABYLON.Matrix.FromArray(boxScaleMatrixArray);
-
-        // Rotation Matrices
-        const boxRotateXMatrixArray = makeRotateXMatrix(30);
-        const boxRotateXMatrix = BABYLON.Matrix.FromArray(
-            boxRotateXMatrixArray
-        );
-
-        const boxRotateYMatrixArray = makeRotateYMatrix(30);
-        const boxRotateYMatrix = BABYLON.Matrix.FromArray(
-            boxRotateYMatrixArray
-        );
-
-        const boxRotateZMatrixArray = makeRotateZMatrix(30);
-        const boxRotateZMatrix = BABYLON.Matrix.FromArray(
-            boxRotateZMatrixArray
-        );
-
-        let boxCombinationMatrix = composeWorldMatrix(
-            boxScaleMatrix,
-            boxRotateXMatrix,
-            boxRotateYMatrix,
-            boxRotateZMatrix,
-            boxTranslationMatrix
-        );
 
         // const boxWorldMatrix = boxTranslationMatrix;
         // const boxWorldMatrix = boxScaleMatrix;
-        const boxWorldMatrix = boxCombinationMatrix;
-
-        boxMaterial.setMatrix("myWorld", boxWorldMatrix);
 
         function update() {
             // get current time in seconds
             const time = performance.now() / 1000;
+            boxMaterial.setFloat("time", time);
+
+            const boxTranslationMatrixArray = makeTranslationMatrix(0 + Math.sin(time), 3, 0);
+            const boxTranslationMatrix = BABYLON.Matrix.FromArray(
+                boxTranslationMatrixArray
+            );
+
+            // Scaling Matrices
+            const boxScaleMatrixArray = makeScaleMatrix(0.5 + Math.sin(time), 0.5 - Math.cos(time), 0.5);
+            const boxScaleMatrix = BABYLON.Matrix.FromArray(boxScaleMatrixArray);
+
+            // Rotation Matrices
+            const boxRotateXMatrixArray = makeRotateXMatrix(30 + time);
+            const boxRotateXMatrix = BABYLON.Matrix.FromArray(
+                boxRotateXMatrixArray
+            );
+
+            const boxRotateYMatrixArray = makeRotateYMatrix(30 - time);
+            const boxRotateYMatrix = BABYLON.Matrix.FromArray(
+                boxRotateYMatrixArray
+            );
+
+            const boxRotateZMatrixArray = makeRotateZMatrix(30 * time);
+            const boxRotateZMatrix = BABYLON.Matrix.FromArray(
+                boxRotateZMatrixArray
+            );
+
+            let boxCombinationMatrix = composeWorldMatrix(
+                boxScaleMatrix,
+                boxRotateXMatrix,
+                boxRotateYMatrix,
+                boxRotateZMatrix,
+                boxTranslationMatrix
+            );
+            const boxWorldMatrix = boxCombinationMatrix;
+
+            boxMaterial.setMatrix("myWorld", boxWorldMatrix);
         }
+
         scene.registerBeforeRender(update);
 
         function makeTranslationMatrix(x: number, y: number, z: number) {
@@ -262,6 +266,8 @@ class Playground {
             worldMatrix = scaling.multiply(worldMatrix);
             return worldMatrix;
         }
+
+        
 
         return scene;
     }
