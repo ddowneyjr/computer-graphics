@@ -2,79 +2,270 @@ import * as BABYLON from "@babylonjs/core";
 import "@babylonjs/loaders";
 
 class Playground {
-    public static CreateScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
+    public static CreateScene(
+        engine: BABYLON.Engine,
+        canvas: HTMLCanvasElement
+    ): BABYLON.Scene {
         var scene = new BABYLON.Scene(engine);
 
-        const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 1, 10, new BABYLON.Vector3(0, 0, 0), scene);
+        // make a ArcRotateCamera, often a little easier to navigate the scene with this. It rotates around the cameraTarget.
+        const horizontalAngle = -Math.PI / 2; // initial horizontal camera angle
+        const verticalAngle = Math.PI / 2; // initial vertical camera angle
+        const distance = 20; // initial camera distance
+        const cameraTarget = new BABYLON.Vector3.Zero();
+        const camera = new BABYLON.ArcRotateCamera(
+            "camera",
+            horizontalAngle,
+            verticalAngle,
+            distance,
+            cameraTarget,
+            scene
+        );
         camera.attachControl(canvas, true);
 
-        var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
+        // light source only for ground (our shader does not process light)
+        const light = new BABYLON.HemisphericLight(
+            "light",
+            new BABYLON.Vector3(0, 1, 0),
+            scene
+        );
         light.intensity = 0.7;
 
-        const vertex_shader = `
-            precision highp float;
-            attribute vec3 position;
-            uniform mat4 myWorld;
-            uniform mat4 world;
-            unifrorm mat4 view;
-            uniform mat4 projection;
+        const box = BABYLON.MeshBuilder.CreateBox("box", { size: 5 }, scene);
+        // ground for spacial reference
+        const ground = BABYLON.MeshBuilder.CreateGround(
+            "ground",
+            { width: 10, height: 10 },
+            scene
+        );
 
-            void main() {
-                vec4 localPosition = vec4(position, 1.);
-                vec4 worldPosition = myWorld * localPosition;
-                vec4 viewPosition = view * worldPosition;
-                vec4 clipPosition = projection * viewPosition;
-                gl_Position = clipPosition;
-            }
-        `;
+        const vertex_shader = `
+        attribute vec3 position;
+        uniform mat4 myWorld;
+        uniform mat4 world;
+        uniform mat4 view;
+        uniform mat4 projection;
+                
+        void main() {
+            vec4 localPosition = vec4(position, 1.);
+            vec4 worldPosition = myWorld * localPosition;     
+            vec4 viewPosition  = view * worldPosition;
+            vec4 clipPosition  = projection * viewPosition;
+            gl_Position = clipPosition;
+        }
+    `;
 
         const fragment_shader = `
-            uniform vec3 color;
-            void main() {
-                gl_FragColor = vec4(color,1);
-            }
-        `;
-
-        const shaderMaterial = new BABYLON.ShaderMaterial("shader", scene, {
-            vertex: "vertex_shader",
-            fragment: "fragment_shader",
-        },
-        {
-            attributes: ["position"],
-            uniforms: ["world", "view", "projection", "myWorld", "color"]
-        });
-
-        let lightBlue = BABYLON.Vector3.FromArray([100.0/255.0, 180.0/255.0, 220.0/255.0]);
-        shaderMaterial.setVector3("color", lightBlue);
-
-        const box = BABYLON.MeshBuilder.CreateBox("box", {size: 2}, scene);
-        box.material = shaderMaterial;
-        
-        const boxTranslationMatrix = BABYLON.Matrix.FromArray(makeTranslationMatrix(0, 0, 0));
-        const boxWorldMatrix = boxTranslationMatrix;
-        // box.setMatrix
-
-        function makeTranslationMatrix(x: number, y: number, z: number): number[] {
-            const translationMatrix = 
-                [
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                x, y, z, 1
-            ];
-            return translationMatrix;
+        uniform vec3 color;
+        // simply assign solid color
+        void main() {
+            gl_FragColor = vec4(color,1);
         }
+    `;
+
+        // make custom ShaderMaterial for your shader code
+        const boxMaterial = new BABYLON.ShaderMaterial(
+            "myMaterial",
+            scene,
+            {
+                vertexSource: vertex_shader,
+                fragmentSource: fragment_shader,
+            },
+            {
+                attributes: ["position"], // position is BabylonJS build-in
+                uniforms: ["myWorld", "world", "view", "projection", "color"], // view, projection are BabylonJS build-in
+            }
+        );
+
+        box.material = boxMaterial;
+
+        // assign color uniform
+        const boxColor = BABYLON.Vector3.FromArray([
+            100 / 255,
+            180 / 255,
+            220 / 255,
+        ]); // green
+        boxMaterial.setVector3("color", boxColor);
+
+        // assign custom myWorld uniform
+
+        // Translation Matrices
+        const boxTranslationMatrixArray = makeTranslationMatrix(0, 3, 0);
+        const boxTranslationMatrix = BABYLON.Matrix.FromArray(
+            boxTranslationMatrixArray
+        );
+
+        // Scaling Matrices
+        const boxScaleMatrixArray = makeScaleMatrix(0.5, 0.5, 0.5);
+        const boxScaleMatrix = BABYLON.Matrix.FromArray(boxScaleMatrixArray);
+
+        // Rotation Matrices
+        const boxRotateXMatrixArray = makeRotateXMatrix(30);
+        const boxRotateXMatrix = BABYLON.Matrix.FromArray(
+            boxRotateXMatrixArray
+        );
+
+        const boxRotateYMatrixArray = makeRotateYMatrix(30);
+        const boxRotateYMatrix = BABYLON.Matrix.FromArray(
+            boxRotateYMatrixArray
+        );
+
+        const boxRotateZMatrixArray = makeRotateZMatrix(30);
+        const boxRotateZMatrix = BABYLON.Matrix.FromArray(
+            boxRotateZMatrixArray
+        );
+
+        let boxCombinationMatrix = composeWorldMatrix(
+            boxScaleMatrix,
+            boxRotateXMatrix,
+            boxRotateYMatrix,
+            boxRotateZMatrix,
+            boxTranslationMatrix
+        );
+
+        // const boxWorldMatrix = boxTranslationMatrix;
+        // const boxWorldMatrix = boxScaleMatrix;
+        const boxWorldMatrix = boxCombinationMatrix;
+
+        boxMaterial.setMatrix("myWorld", boxWorldMatrix);
 
         function update() {
+            // get current time in seconds
             const time = performance.now() / 1000;
         }
         scene.registerBeforeRender(update);
 
+        function makeTranslationMatrix(x, y, z) {
+            var translationMatrix = [
+                1,
+                0,
+                0,
+                0, // <- i
+                0,
+                1,
+                0,
+                0, // <- j
+                0,
+                0,
+                1,
+                0, // <- k
+                x,
+                y,
+                z,
+                1, // <- t
+            ];
+            return translationMatrix;
+        }
+
+        function makeScaleMatrix(x, y, z) {
+            var scaleMatrix = [
+                x,
+                0,
+                0,
+                0, // <- i
+                0,
+                y,
+                0,
+                0, // <- j
+                0,
+                0,
+                z,
+                0, // <- k
+                0,
+                0,
+                0,
+                1,
+            ];
+            return scaleMatrix;
+        }
+
+        function makeRotateXMatrix(a) {
+            var rotateMatrix = [
+                1,
+                0,
+                0,
+                0, // <- i
+                0,
+                Math.cos(a),
+                -Math.sin(a),
+                0, // <- j
+                0,
+                Math.sin(a),
+                Math.cos(a),
+                0, // <- k
+                0,
+                0,
+                0,
+                1,
+            ];
+            return rotateMatrix;
+        }
+
+        function makeRotateYMatrix(a) {
+            var rotateMatrix = [
+                Math.cos(a),
+                0,
+                Math.sin(a),
+                0, // <- i
+                0,
+                1,
+                0,
+                0, // <- j
+                -Math.sin(a),
+                0,
+                Math.cos(a),
+                0, // <- k
+                0,
+                0,
+                0,
+                1,
+            ];
+            return rotateMatrix;
+        }
+
+        function makeRotateZMatrix(a) {
+            var rotateMatrix = [
+                Math.cos(a),
+                -Math.sin(a),
+                0,
+                0, // <- i
+                Math.sin(a),
+                Math.cos(a),
+                0,
+                0, // <- j
+                0,
+                0,
+                1,
+                0, // <- k
+                0,
+                0,
+                0,
+                1,
+            ];
+            return rotateMatrix;
+        }
+
+        function composeWorldMatrix(
+            scaling,
+            rotationX,
+            rotationY,
+            rotationZ,
+            translate
+        ) {
+            let worldMatrix = rotationY.multiply(translate);
+            worldMatrix = rotationX.multiply(worldMatrix);
+            worldMatrix = rotationZ.multiply(worldMatrix);
+            worldMatrix = scaling.multiply(worldMatrix);
+            return worldMatrix;
+        }
+
         return scene;
     }
-
 }
 
-export function CreatePlaygroundScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene {
+export function CreatePlaygroundScene(
+    engine: BABYLON.Engine,
+    canvas: HTMLCanvasElement
+): BABYLON.Scene {
     return Playground.CreateScene(engine, canvas);
 }
