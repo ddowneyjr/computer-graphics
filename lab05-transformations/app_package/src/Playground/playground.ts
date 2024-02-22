@@ -12,6 +12,7 @@ class Playground {
         const horizontalAngle = -Math.PI / 2; // initial horizontal camera angle
         const verticalAngle = Math.PI / 2; // initial vertical camera angle
         const distance = 20; // initial camera distance
+        // @ts-ignore
         const cameraTarget = new BABYLON.Vector3.Zero();
         const camera = new BABYLON.ArcRotateCamera(
             "camera",
@@ -38,6 +39,9 @@ class Playground {
             { width: 10, height: 10 },
             scene
         );
+
+        ground.material = new BABYLON.StandardMaterial("groundMat", scene);
+        ground.material.backFaceCulling = false;
 
         const vertex_shader = `
         attribute vec3 position;
@@ -135,7 +139,7 @@ class Playground {
         }
         scene.registerBeforeRender(update);
 
-        function makeTranslationMatrix(x, y, z) {
+        function makeTranslationMatrix(x: number, y: number, z: number) {
             var translationMatrix = [
                 1,
                 0,
@@ -157,7 +161,7 @@ class Playground {
             return translationMatrix;
         }
 
-        function makeScaleMatrix(x, y, z) {
+        function makeScaleMatrix(x: number, y: number, z: number) {
             var scaleMatrix = [
                 x,
                 0,
@@ -179,7 +183,7 @@ class Playground {
             return scaleMatrix;
         }
 
-        function makeRotateXMatrix(a) {
+        function makeRotateXMatrix(a: number) {
             var rotateMatrix = [
                 1,
                 0,
@@ -201,7 +205,7 @@ class Playground {
             return rotateMatrix;
         }
 
-        function makeRotateYMatrix(a) {
+        function makeRotateYMatrix(a: number) {
             var rotateMatrix = [
                 Math.cos(a),
                 0,
@@ -223,7 +227,7 @@ class Playground {
             return rotateMatrix;
         }
 
-        function makeRotateZMatrix(a) {
+        function makeRotateZMatrix(a: number) {
             var rotateMatrix = [
                 Math.cos(a),
                 -Math.sin(a),
@@ -246,11 +250,11 @@ class Playground {
         }
 
         function composeWorldMatrix(
-            scaling,
-            rotationX,
-            rotationY,
-            rotationZ,
-            translate
+            scaling: BABYLON.Matrix,
+            rotationX: BABYLON.Matrix,
+            rotationY: BABYLON.Matrix,
+            rotationZ: BABYLON.Matrix,
+            translate: BABYLON.Matrix
         ) {
             let worldMatrix = rotationY.multiply(translate);
             worldMatrix = rotationX.multiply(worldMatrix);
