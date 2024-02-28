@@ -33,6 +33,8 @@ class Playground {
         light.intensity = 0.7;
 
         const box = BABYLON.MeshBuilder.CreateBox("box", { size: 5 }, scene);
+        const childBox = BABYLON.MeshBuilder.CreateBox("childBox", { size: 2 }, scene);
+        
         // ground for spacial reference
         const ground = BABYLON.MeshBuilder.CreateGround(
             "ground",
@@ -50,6 +52,7 @@ class Playground {
         uniform mat4 view;
         uniform mat4 projection;
         uniform float time;
+        varying mat4 woldPosition;
                 
         void main() {
             vec4 localPosition = vec4(position, 1.);
@@ -82,7 +85,21 @@ class Playground {
             }
         );
 
+        const childBoxMaterial = new BABYLON.ShaderMaterial(
+            "childMaterial",
+            scene,
+            {
+                vertexSource: vertex_shader,
+                fragmentSource: fragment_shader,
+            },
+            {
+                attributes: ["position"], // position is BabylonJS build-in
+                uniforms: ["myWorld", "world", "view", "projection", "color", "time"], // view, projection are BabylonJS build-in
+            }
+        );
+
         box.material = boxMaterial;
+        childBox.material = childBoxMaterial;
 
         // assign color uniform
         const boxColor = BABYLON.Vector3.FromArray([
@@ -91,6 +108,7 @@ class Playground {
             220 / 255,
         ]); // green
         boxMaterial.setVector3("color", boxColor);
+        childBoxMaterial.setVector3("color", BABYLON.Vector3.FromArray([1, 0, 0]));
 
         // assign custom myWorld uniform
 
@@ -101,10 +119,11 @@ class Playground {
 
         function update() {
             // get current time in seconds
-            const time = performance.now() / 1000;
+            // let time = performance.now() / 1000;
+            const time = 1
             boxMaterial.setFloat("time", time);
 
-            const boxTranslationMatrixArray = makeTranslationMatrix(0 + Math.sin(time), 3, 0);
+            const boxTranslationMatrixArray = makeTranslationMatrix(0 + 5 * Math.sin(time), 3, 0);
             const boxTranslationMatrix = BABYLON.Matrix.FromArray(
                 boxTranslationMatrixArray
             );
@@ -114,17 +133,17 @@ class Playground {
             const boxScaleMatrix = BABYLON.Matrix.FromArray(boxScaleMatrixArray);
 
             // Rotation Matrices
-            const boxRotateXMatrixArray = makeRotateXMatrix(30 + time);
+            const boxRotateXMatrixArray = makeRotateXMatrix(30 + (0.1 * time));
             const boxRotateXMatrix = BABYLON.Matrix.FromArray(
                 boxRotateXMatrixArray
             );
 
-            const boxRotateYMatrixArray = makeRotateYMatrix(30 - time);
+            const boxRotateYMatrixArray = makeRotateYMatrix(30 - (0.1 * time));
             const boxRotateYMatrix = BABYLON.Matrix.FromArray(
                 boxRotateYMatrixArray
             );
 
-            const boxRotateZMatrixArray = makeRotateZMatrix(30 * time);
+            const boxRotateZMatrixArray = makeRotateZMatrix(3 * time);
             const boxRotateZMatrix = BABYLON.Matrix.FromArray(
                 boxRotateZMatrixArray
             );
@@ -136,9 +155,29 @@ class Playground {
                 boxRotateZMatrix,
                 boxTranslationMatrix
             );
-            const boxWorldMatrix = boxCombinationMatrix;
 
-            boxMaterial.setMatrix("myWorld", boxWorldMatrix);
+            boxMaterial.setMatrix("myWorld", boxCombinationMatrix);
+
+            const childTranslationMatrixArray = makeTranslationMatrix(0, 0, 0);
+            const childTranslationMatrix = BABYLON.Matrix.FromArray(childTranslationMatrixArray);
+            const childScaleMatrixArray = makeScaleMatrix(1, 1, 1);
+            const childScaleMatrix = BABYLON.Matrix.FromArray(childScaleMatrixArray);
+            const childRorationXMartixArray = makeRotateXMatrix(0);
+            const childRorationXMartix = BABYLON.Matrix.FromArray(childRorationXMartixArray);
+            const childRorationYMartixArray = makeRotateYMatrix(0);
+            const childRorationYMartix = BABYLON.Matrix.FromArray(childRorationYMartixArray);
+            const childRorationZMartixArray = makeRotateZMatrix(0);
+            const childRorationZMartix = BABYLON.Matrix.FromArray(childRorationZMartixArray);
+
+            let childCombinationMatrix = composeWorldMatrix(
+                childScaleMatrix,
+                childRorationXMartix,
+                childRorationYMartix,
+                childRorationZMartix,
+                childTranslationMatrix
+            );
+
+            childBoxMaterial.setMatrix("myWorld", applyParentMatrix(boxCombinationMatrix, childCombinationMatrix));
         }
 
         scene.registerBeforeRender(update);
@@ -267,7 +306,10 @@ class Playground {
             return worldMatrix;
         }
 
-        
+        function applyParentMatrix(child: BABYLON.Matrix, parent: BABYLON.Matrix) {
+            return parent.multiply(child);
+        }
+
 
         return scene;
     }
