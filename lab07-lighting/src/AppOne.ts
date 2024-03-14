@@ -97,9 +97,9 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
 
             // finish the algorithm to calculate simple lambertian/diffuse shading
             vec3 pixelColor = vec3(1,0,0);
+            float d = dot(normalizedNormal, -normalizedLightDirection);
+            pixelColor = surfaceColor * lightIntensity * d;
             gl_FragColor = vec4(pixelColor,1);
-            
-            
         }
     `;
 
