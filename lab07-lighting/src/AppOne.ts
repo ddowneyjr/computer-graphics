@@ -57,6 +57,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     controlSphere.material = new BABYLON.StandardMaterial("control material", scene);
     (controlSphere.material as BABYLON.StandardMaterial).diffuseColor = BABYLON.Color3.Red();
     // controlSphere.material.diffuseColor = BABYLON.Color3.Red();
+    //
 
     // ` ` these quatioan marks allow a multi-line string in Javascript (" " or ' ' is single line)
     var vertex_shader = `
