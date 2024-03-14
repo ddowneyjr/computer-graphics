@@ -32,7 +32,7 @@ export class AppOne {
 }
 
 
-var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
+function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON.Scene{
     // Scene, Camera and Light setup
     const scene = new BABYLON.Scene(engine);
 	const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 1, 10, new BABYLON.Vector3(0, 0, 0), scene);
@@ -43,15 +43,15 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     const light = new BABYLON.DirectionalLight("DirectionalLight", lightDirection, scene);
 
     // 'ground' mesh for reference.
-    var ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
 
     // sphere mesh for use with our shader
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2});
+    const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2});
     sphere.position.y = 1;
     sphere.position.x = 1.5;
     
     // sphere mesh to see how BabylonJS renders light
-    var controlSphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2}); 
+    const controlSphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2}); 
     controlSphere.position.y = 1;
     controlSphere.position.x = -1.5;
     controlSphere.material = new BABYLON.StandardMaterial("control material", scene);
@@ -60,7 +60,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     //
 
     // ` ` these quatioan marks allow a multi-line string in Javascript (" " or ' ' is single line)
-    var vertex_shader = `
+    const vertex_shader = `
         attribute vec3 position;
         attribute vec3 normal;
         uniform mat4 world;
@@ -84,7 +84,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         }
     `;
 
-    var fragment_shader = `
+    const fragment_shader = `
         uniform vec3 surfaceColor;
         uniform vec3 lightDirection;
         uniform float lightIntensity;
@@ -98,10 +98,11 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
             // finish the algorithm to calculate simple lambertian/diffuse shading
             vec3 pixelColor = vec3(1,0,0);
             gl_FragColor = vec4(pixelColor,1);
+            
         }
     `;
 
-    var shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
+    const shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
         // assign source code for vertex and fragment shader (string)
         vertexSource: vertex_shader, 
         fragmentSource: fragment_shader
@@ -113,11 +114,11 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
                     "inverseTranspose", "surfaceColor", 
                     "lightDirection", "lightIntensity"] 
     });
-    var surfaceColor = BABYLON.Vector3.FromArray([1,0,0]) // red
+    const surfaceColor = BABYLON.Vector3.FromArray([1,0,0]) // red
     
     sphere.material = shaderMaterial;
     
-    function update() {
+    function update(): void {
         let world4x4 = sphere.getWorldMatrix();
         let normalMatrix4x4 = new BABYLON.Matrix();
         world4x4.toNormalMatrix(normalMatrix4x4);
