@@ -84,10 +84,13 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
         }
     `;
 
-    const fragment_shader = `
+    const lambertian = `
         uniform vec3 surfaceColor;
         uniform vec3 lightDirection;
         uniform float lightIntensity;
+        uniform vec3 lightColor;
+        uniform vec3 ambientLightColor;
+        uniform float ambientIntensity;
 
         varying vec3 worldNormal;
 
@@ -95,27 +98,64 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
             vec3 normalizedLightDirection = normalize(lightDirection);
             vec3 normalizedNormal = normalize(worldNormal);
 
-            // finish the algorithm to calculate simple lambertian/diffuse shading
             vec3 pixelColor = vec3(1,0,0);
             float d = dot(normalizedNormal, -normalizedLightDirection);
             pixelColor = surfaceColor * lightIntensity * d;
+            pixelColor = pixelColor * lightColor;
+            pixelColor = pixelColor + (ambientLightColor * ambientIntensity);
             gl_FragColor = vec4(pixelColor,1);
         }
+    `;
+
+    const blinn = `
+        uniform vec3 surfaceColor;
+        uniform vec3 lightDirection;
+        uniform float lightIntensity;
+        uniform vec3 lightColor;
+        uniform vec3 ambientLightColor;
+        uniform float ambientIntensity;
+
+        varying vec3 worldNormal;
+
+        void main() {
+            vec3 normalizedLightDirection = normalize(lightDirection);
+            vec3 normalizedNormal = normalize(worldNormal);
+
+            float cosTheta = dot(normalizedNormal, -normalizedLightDirection);
+            vec3 diffuseTerm = lightIntensity * lightColor * surfaceColor * cosTheta;
+            vec3 ambientTerm = ambientIntensity * ambientLightColor;
+            // vec3 specularTerm = cos(
+
+            if (cosTheta > 0.0) {
+                vec3 pixelColor = diffuseTerm + ambientTerm;
+            }
+            else {
+                vec3 pixelColor = ambientTerm;
+            }
+            gl_FragColor = vec4(pixelColor, 1);
+        }
+
     `;
 
     const shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
         // assign source code for vertex and fragment shader (string)
         vertexSource: vertex_shader, 
-        fragmentSource: fragment_shader
+        fragmentSource: blinn 
     },
     {
         // assign shader inputs
         attributes: ["position", "normal"], // position and normal are BabylonJS build-in
         uniforms: ["world", "view", "projection", // world, view, projection are BabylonJS build-in
                     "inverseTranspose", "surfaceColor", 
-                    "lightDirection", "lightIntensity"] 
+                    "lightDirection", "lightIntensity", "lightColor", "ambientLightColor", "ambientIntensity"] 
     });
-    const surfaceColor = BABYLON.Vector3.FromArray([1,0,0]) // red
+    const surfaceColor = hexToVec3("#892bb6");
+    // const surfaceColor = hexToVec3("#ffffff");
+    // const lightColor = hexToVec3("#f4f33d");
+    const lightColor = hexToVec3("#ffffff");
+    const ambientIntensity = 0.2;
+    const ambientLightColor = hexToVec3("#f4f33d");
+
     
     sphere.material = shaderMaterial;
     
@@ -129,8 +169,15 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
         shaderMaterial.setVector3("surfaceColor", surfaceColor);
         shaderMaterial.setVector3("lightDirection", light.direction);
         shaderMaterial.setFloat("lightIntensity", light.intensity);
+        shaderMaterial.setVector3("lightColor", lightColor);
+        shaderMaterial.setVector3("ambientLightColor", ambientLightColor);
+        shaderMaterial.setFloat("ambientIntensity", ambientIntensity);
     }
     scene.registerBeforeRender(update);
 
     return scene;
+}
+
+function hexToVec3(hex: string): BABYLON.Vector3 {
+    return BABYLON.Vector3.FromArray(BABYLON.Color3.FromHexString(hex).toLinearSpace().asArray());
 }
