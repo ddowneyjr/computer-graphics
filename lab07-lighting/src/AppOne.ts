@@ -99,6 +99,7 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
             vec3 pixelColor = vec3(1,0,0);
             gl_FragColor = vec4(pixelColor,1);
             
+            
         }
     `;
 
