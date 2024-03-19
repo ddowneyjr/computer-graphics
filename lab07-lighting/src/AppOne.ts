@@ -69,12 +69,15 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
         uniform mat3 inverseTranspose;
 
         varying vec3 worldNormal;
+        varying vec3 worldPos;
                 
         void main() {
             vec4 localPosition = vec4(position, 1.);
             vec4 worldPosition = world * localPosition;     
             vec4 viewPosition  = view * worldPosition;
             vec4 clipPosition  = projection * viewPosition;
+
+            worldPos = worldPosition.xyz;
 
             // transform normal to world space, so light direction 
             // and normal are in the same space.
@@ -114,23 +117,52 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
         uniform vec3 lightColor;
         uniform vec3 ambientLightColor;
         uniform float ambientIntensity;
+        uniform vec3 specularColor;
+        uniform float specularIntensity;
+        uniform vec3 viewPosition;
 
         varying vec3 worldNormal;
+        varying vec3 worldPos;
 
         void main() {
+
+            // l
             vec3 normalizedLightDirection = normalize(lightDirection);
+            
+            // n
             vec3 normalizedNormal = normalize(worldNormal);
 
+            // v
+            vec3 normalizedViewDirection = normalize(viewPosition - worldPos);
+
+            // h
+            vec3 normalizedhalfVector = normalize(normalizedNormal + normalizedViewDirection);
+
             float cosTheta = dot(normalizedNormal, -normalizedLightDirection);
+            float cosAlpha = dot(normalizedNormal, normalizedhalfVector);
+
+
+            vec3 specularTerm = (pow(cosAlpha, specularIntensity)) * specularColor;
+            
+            // vec3 specularTerm;
+            // if (cosAlpha > 0.0) {
+            //     specularTerm = pow(cosAlpha, specularIntensity) * specularColor;
+            // } else {
+            //     specularTerm = vec3(0.0); // No specular reflection when light is behind the surface
+            // }
             vec3 diffuseTerm = lightIntensity * lightColor * surfaceColor * cosTheta;
             vec3 ambientTerm = ambientIntensity * ambientLightColor;
-            // vec3 specularTerm = cos(
+            
+
+            
+            vec3 pixelColor;
+            
 
             if (cosTheta > 0.0) {
-                vec3 pixelColor = diffuseTerm + ambientTerm;
+                pixelColor = diffuseTerm + specularTerm + ambientTerm;
             }
             else {
-                vec3 pixelColor = ambientTerm;
+                pixelColor = ambientTerm;
             }
             gl_FragColor = vec4(pixelColor, 1);
         }
@@ -172,6 +204,9 @@ function createScene(engine: BABYLON.Engine, canvas: HTMLCanvasElement): BABYLON
         shaderMaterial.setVector3("lightColor", lightColor);
         shaderMaterial.setVector3("ambientLightColor", ambientLightColor);
         shaderMaterial.setFloat("ambientIntensity", ambientIntensity);
+        shaderMaterial.setVector3("viewPosition", camera.position);
+        shaderMaterial.setVector3("specularColor", hexToVec3("#ffffff"));
+        shaderMaterial.setFloat("specularIntensity", 50);
     }
     scene.registerBeforeRender(update);
 
