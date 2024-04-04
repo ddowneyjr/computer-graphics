@@ -94,6 +94,63 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     sphere.material = shaderMaterial;
     shaderMaterial.setTexture("reflectionTexture", reflectionTexture);
 
+
+    // Skybox
+
+    var skybox_vertex_shader = `
+        attribute vec3 position;
+
+        uniform mat4 view;
+        uniform mat4 projection;
+        
+        varying vec3 vPos;
+
+        void main() {
+            vec4 localPosition = vec4(position, 1.); 
+            mat4 skyboxView = view;
+
+            // remove translation data from view matrix
+            skyboxView[3].x = 0.0;
+            skyboxView[3].y = 0.0;
+            skyboxView[3].z = 0.0;
+            vec4 viewPosition  = skyboxView * localPosition;
+            vec4 clipPosition  = projection * viewPosition;
+
+            clipPosition.z = clipPosition.w; // make sure depth is maxed out
+
+            vPos = position.xyz;
+
+            gl_Position = clipPosition;
+        }
+    `
+
+    var skybox_fragment_shader = `
+        uniform samplerCube skyboxTexture;
+
+        varying vec3 vPos;
+
+        void main() {
+            vec3 reflectionColor = textureCube(skyboxTexture, vPos).rgb;
+            gl_FragColor = vec4(reflectionColor,1);
+        }
+
+    `
+
+    var skyboxShaderMaterial = new BABYLON.ShaderMaterial('skyboxMaterial', scene, {
+        vertexSource: skybox_vertex_shader,
+        fragmentSource: skybox_fragment_shader
+    }, {
+        attributes: ["position"],
+        uniforms: ["world", "view", "projection"],
+        samplers: ["skyboxTexture"]
+    });
+
+    skyboxShaderMaterial.setTexture("skyboxTexture", reflectionTexture);
+    skyboxShaderMaterial.disableDepthWrite = true;
+
+    var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size: 4.0, sideOrientation: BABYLON.Mesh.BACKSIDE}, scene);
+    skybox.material = skyboxShaderMaterial;
+
     var update = function() {
         shaderMaterial.setVector3("viewPosition", camera.position);
     }
