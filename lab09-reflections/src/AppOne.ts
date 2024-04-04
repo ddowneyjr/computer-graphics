@@ -87,13 +87,18 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     },
     {
         attributes: ["position", "normal"], 
-        uniforms: ["world", "view", "projection"],
+        uniforms: ["world", "view", "projection", "viewPosition"],
         samplers: ["reflectionTexture"]
     });
    
     sphere.material = shaderMaterial;
-    shaderMaterial.setVector3("ViewPosition", camera.position);
     shaderMaterial.setTexture("reflectionTexture", reflectionTexture);
+
+    var update = function() {
+        shaderMaterial.setVector3("viewPosition", camera.position);
+    }
+
+    scene.registerBeforeRender(update);
 
     return scene;
 };
