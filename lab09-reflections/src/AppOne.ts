@@ -9,7 +9,6 @@ export class AppOne {
             this.engine.resize();
         });
         this.scene = createScene(this.engine, this.canvas)
-
     }
 
     debug(debugOn: boolean = true) {
@@ -26,19 +25,71 @@ export class AppOne {
             this.scene.render();
         });
     }
-
-
-
 }
 
 
 var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var scene = new BABYLON.Scene(engine);
-    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
-    camera.setTarget(BABYLON.Vector3.Zero());
+    const camera = new BABYLON.ArcRotateCamera("Camera", -Math.PI/2, 1, 10, new BABYLON.Vector3(0, 0, 0), scene);
     camera.attachControl(canvas, true);
-    var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.7;
+    var reflectionTexture = new BABYLON.CubeTexture("./assets/skybox", scene);
+
+
+    // sphere mesh for use with our shader
+    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 1}, scene);
+    sphere.position.y = 1;
+
+    // let skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size: 4, sideOrientation: BABYLON.Mesh.BACKSIDE}, scene);
+    // skyboxMaj
+
+    var vertex_shader = `
+        attribute vec3 position;
+        attribute vec3 normal;
+ 
+        uniform mat4 world;
+        uniform mat4 view;
+        uniform mat4 projection;
+
+        varying vec3 worldNormal;
+                
+        void main() {
+            vec4 localPosition = vec4(position, 1.);
+            vec4 worldPosition = world * localPosition;     
+            vec4 viewPosition  = view * worldPosition;
+            vec4 clipPosition  = projection * viewPosition;
+
+            worldNormal = mat3(world) * normal;
+
+            gl_Position = clipPosition;
+        }
+    `;
+
+    var fragment_shader = `
+        varying vec3 worldNormal;
+        uniform vec3 viewPosition;
+        uniform samplerCube reflectionTexture;
+
+        void main() {
+            vec3 reflectionDir = reflect(viewPosition, worldNormal);
+            vec3 reflectionColor = textureCube(reflectionTexture, reflectionDir).rgb;
+            // gl_FragColor = vec4(worldNormal,1);
+            gl_FragColor = vec4(reflectionColor, 1);
+        }
+    `;
+
+    var shaderMaterial = new BABYLON.ShaderMaterial('myMaterial', scene, { 
+        vertexSource: vertex_shader, 
+        fragmentSource: fragment_shader
+    },
+    {
+        attributes: ["position", "normal"], 
+        uniforms: ["world", "view", "projection"],
+        samplers: ["reflectionTexture"]
+    });
+   
+    sphere.material = shaderMaterial;
+    shaderMaterial.setVector3("ViewPosition", camera.position);
+    shaderMaterial.setTexture("reflectionTexture", reflectionTexture);
 
     return scene;
 };
