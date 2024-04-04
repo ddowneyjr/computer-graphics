@@ -151,6 +151,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
     var skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size: 4.0, sideOrientation: BABYLON.Mesh.BACKSIDE}, scene);
     skybox.material = skyboxShaderMaterial;
 
+
     var update = function() {
         shaderMaterial.setVector3("viewPosition", camera.position);
     }
