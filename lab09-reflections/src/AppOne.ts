@@ -51,6 +51,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         uniform mat4 projection;
 
         varying vec3 worldNormal;
+        varying vec3 vWorldPosition;
                 
         void main() {
             vec4 localPosition = vec4(position, 1.);
@@ -59,6 +60,7 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
             vec4 clipPosition  = projection * viewPosition;
 
             worldNormal = mat3(world) * normal;
+            vWorldPosition = worldPosition.xyz;
 
             gl_Position = clipPosition;
         }
@@ -68,11 +70,13 @@ var createScene = function (engine: BABYLON.Engine, canvas: HTMLCanvasElement) {
         varying vec3 worldNormal;
         uniform vec3 viewPosition;
         uniform samplerCube reflectionTexture;
+        
+        varying vec3 vWorldPosition;
 
         void main() {
-            vec3 reflectionDir = reflect(viewPosition, worldNormal);
+            vec3 viewDirection = normalize(vWorldPosition - viewPosition);
+            vec3 reflectionDir = reflect(viewDirection, worldNormal);
             vec3 reflectionColor = textureCube(reflectionTexture, reflectionDir).rgb;
-            // gl_FragColor = vec4(worldNormal,1);
             gl_FragColor = vec4(reflectionColor, 1);
         }
     `;
